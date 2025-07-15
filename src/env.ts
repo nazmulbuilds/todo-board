@@ -16,6 +16,7 @@ const EnvSchema = z.object({
   PORT: z.coerce.number().default(5000),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]),
   DATABASE_URL: z.string().url(),
+  JWT_ACCESS_TOKEN_SECRET: z.string(),
 });
 
 export type env = z.infer<typeof EnvSchema>;
