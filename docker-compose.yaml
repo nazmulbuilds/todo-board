@@ -1,0 +1,34 @@
+services:
+  postgres:
+    image: postgres
+    container_name: postgres
+    restart: on-failure
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-todo-board}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+# services:
+#   postgres:
+#     image: postgres
+#     container_name: postgres
+#     restart: on-failure
+#     ports:
+#       - 5432:5432
+#     environment:
+#       POSTGRES_DB: nestjs-starter
+#       POSTGRES_USER: ${POSTGRES_USER:-postgres}
+#       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+#   pgadmin:
+#     image: dpage/pgadmin4
+#     container_name: pgadmin
+#     depends_on:
+#       - postgres
+#     environment:
+#       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin@domain.com}
+#       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-password}
+#       PGADMIN_CONFIG_SERVER_MODE: 'False'
+#       PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: 'False'
+#     ports:
+#       - 5050:80
