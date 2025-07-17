@@ -1,6 +1,9 @@
+import { relations } from "drizzle-orm";
 import { pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema, createUpdateSchema } from "drizzle-zod";
 import { createZodDto } from "nestjs-zod";
+
+import { tickets } from "../tickets/schema";
 
 export const categories = pgTable("categories", {
   id: serial("id").primaryKey(),
@@ -8,6 +11,10 @@ export const categories = pgTable("categories", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
 });
+
+export const categoriesRelations = relations(categories, ({ many }) => ({
+  tickets: many(tickets),
+}));
 
 export const SelectCategoriesDto = createZodDto(createSelectSchema(categories));
 

@@ -19,7 +19,11 @@ export class CategoriesService {
   }
 
   async getAll() {
-    return this.db.query.categories.findMany();
+    return this.db.query.categories.findMany({
+      with: {
+        tickets: true,
+      },
+    });
   }
 
   async getById(id: string) {

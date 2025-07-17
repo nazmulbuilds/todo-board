@@ -11,6 +11,7 @@ import { DatabaseModule } from "./database/database.module";
 import env from "./env";
 import { HttpExceptionFilter } from "./http-exception.filter";
 import { LabelsModule } from "./labels/labels.module";
+import { TicketsModule } from "./tickets/tickets.module";
 import { UsersModule } from "./users/users.module";
 
 @Module({
@@ -24,7 +25,7 @@ import { UsersModule } from "./users/users.module";
           : { target: "pino-pretty" },
       },
     exclude: [{ method: RequestMethod.ALL, path: "check" }],
-  }), DatabaseModule, UsersModule, AuthModule, CategoriesModule, LabelsModule],
+  }), DatabaseModule, UsersModule, AuthModule, CategoriesModule, LabelsModule, TicketsModule],
   controllers: [AppController],
   providers: [AppService, {
     provide: APP_PIPE,
