@@ -6,6 +6,7 @@ import { ZodSerializerInterceptor, ZodValidationPipe } from "nestjs-zod";
 import { AppController } from "./app.controller";
 import { AppService } from "./app.service";
 import { AuthModule } from "./auth/auth.module";
+import { CategoriesModule } from "./categories/categories.module";
 import { DatabaseModule } from "./database/database.module";
 import env from "./env";
 import { HttpExceptionFilter } from "./http-exception.filter";
@@ -22,7 +23,7 @@ import { UsersModule } from "./users/users.module";
           : { target: "pino-pretty" },
       },
     exclude: [{ method: RequestMethod.ALL, path: "check" }],
-  }), DatabaseModule, UsersModule, AuthModule],
+  }), DatabaseModule, UsersModule, AuthModule, CategoriesModule],
   controllers: [AppController],
   providers: [AppService, {
     provide: APP_PIPE,

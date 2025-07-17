@@ -9,6 +9,11 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-todo-board}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
 # services:
 #   postgres:
 #     image: postgres
