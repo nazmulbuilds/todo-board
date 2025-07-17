@@ -1,6 +1,6 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { eq } from "drizzle-orm";
-import { NodePgDatabase, NodePgTransaction } from "drizzle-orm/node-postgres";
+import { NodePgDatabase } from "drizzle-orm/node-postgres";
 
 import { DATABASE_CONNECTION } from "../database/database-connection";
 import * as schema from "./schema";
@@ -12,7 +12,7 @@ export class LabelsService {
     private readonly db: NodePgDatabase<typeof schema>,
   ) {}
 
-  async create(data: schema.InsertLabelsDto, tx?: NodePgTransaction<any, any>) {
+  async create(data: schema.InsertLabelsDto) {
     // check if the title is already taken
     const existingLabel = await this.db.query.labels.findFirst({
       where: (labels, { eq }) => eq(labels.title, data.title),
@@ -22,7 +22,7 @@ export class LabelsService {
       throw new BadRequestException("Label title already taken");
     }
 
-    const [insertedRow] = await (tx || this.db).insert(schema.labels).values(data).returning();
+    const [insertedRow] = await this.db.insert(schema.labels).values(data).returning();
 
     return insertedRow;
   }
@@ -43,18 +43,18 @@ export class LabelsService {
     return label;
   }
 
-  async update(id: string, data: schema.UpdateLabelsDto, tx?: NodePgTransaction<any, any>) {
+  async update(id: string, data: schema.UpdateLabelsDto) {
     // check if the label exists
     await this.getById(id);
 
-    const [updatedRow] = await (tx || this.db).update(schema.labels).set(data).where(eq(schema.labels.id, Number(id))).returning();
+    const [updatedRow] = await this.db.update(schema.labels).set(data).where(eq(schema.labels.id, Number(id))).returning();
 
     return updatedRow;
   }
 
-  async delete(id: string, tx?: NodePgTransaction<any, any>) {
+  async delete(id: string) {
     // check if the label exists
     await this.getById(id);
-    await (tx || this.db).delete(schema.labels).where(eq(schema.labels.id, Number(id)));
+    await this.db.delete(schema.labels).where(eq(schema.labels.id, Number(id)));
   }
 }

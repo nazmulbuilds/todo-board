@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, UseGuards } from "@nestjs/common";
+import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
 import { ApiBadRequestResponse, ApiBearerAuth, ApiCreatedResponse, ApiNotFoundResponse, ApiOkResponse, ApiTags } from "@nestjs/swagger";
 
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
@@ -37,7 +37,11 @@ export class CategoriesController {
   @Delete(":id")
   @ApiOkResponse({ description: "Delete category" })
   @ApiNotFoundResponse(generateNotFoundExample("Category"))
-  deleteCategory(@Param("id") id: string) {
-    return this.categoriesService.delete(id);
+  deleteCategory(@Param("id") id: string, @Query("moveExistingTicketsToCategoryId") moveExistingTicketsToCategoryId: string) {
+    if (!moveExistingTicketsToCategoryId) {
+      throw new BadRequestException("moveExistingTicketsToCategoryId is required");
+    }
+
+    return this.categoriesService.delete(id, moveExistingTicketsToCategoryId);
   }
 }

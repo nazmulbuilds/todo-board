@@ -1,6 +1,6 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
 import * as bcrypt from "bcrypt";
-import { NodePgDatabase, NodePgTransaction } from "drizzle-orm/node-postgres";
+import { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { sha256 } from "js-sha256";
 
 import { DATABASE_CONNECTION } from "../database/database-connection";
@@ -13,10 +13,10 @@ export class UsersService {
     private readonly db: NodePgDatabase<typeof schema>,
   ) {}
 
-  async create(data: schema.CreateUsersDto, tx?: NodePgTransaction<any, any>): Promise<schema.UserWithoutPassword> {
+  async create(data: schema.CreateUsersDto): Promise<schema.UserWithoutPassword> {
     const salt = await bcrypt.genSalt(10);
     const hash = await bcrypt.hash(sha256(data.password), salt);
-    const [insertedRow] = await (tx || this.db).insert(schema.users).values({
+    const [insertedRow] = await this.db.insert(schema.users).values({
       ...data,
       password: hash,
     }).returning();

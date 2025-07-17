@@ -14,8 +14,8 @@ export class TicketsService {
     private readonly labelsService: LabelsService,
   ) {}
 
-  async create(data: schema.InsertTicketsDto, tx?: NodePgTransaction<any, any>) {
-    const [insertedRow] = await (tx || this.db).insert(schema.tickets).values(data).returning();
+  async create(data: schema.InsertTicketsDto) {
+    const [insertedRow] = await this.db.insert(schema.tickets).values(data).returning();
 
     return insertedRow;
   }
@@ -117,18 +117,22 @@ export class TicketsService {
     }
   }
 
-  async update(id: string, data: schema.UpdateTicketsDto, tx?: NodePgTransaction<any, any>) {
+  async update(id: string, data: schema.UpdateTicketsDto) {
     // check if the label exists
     await this.checkIfExists(id);
 
-    const [updatedRow] = await (tx || this.db).update(schema.tickets).set(data).where(eq(schema.tickets.id, Number(id))).returning();
+    const [updatedRow] = await this.db.update(schema.tickets).set(data).where(eq(schema.tickets.id, Number(id))).returning();
 
     return updatedRow;
   }
 
-  async delete(id: string, tx?: NodePgTransaction<any, any>) {
+  async bulkUpdateCategory(oldCategoryId: string, newCategoryId: string, tx: NodePgTransaction<any, any>) {
+    await tx.update(schema.tickets).set({ categoryId: Number(newCategoryId) }).where(eq(schema.tickets.categoryId, Number(oldCategoryId)));
+  }
+
+  async delete(id: string) {
     // check if the label exists
     await this.checkIfExists(id);
-    await (tx || this.db).delete(schema.tickets).where(eq(schema.tickets.id, Number(id)));
+    await this.db.delete(schema.tickets).where(eq(schema.tickets.id, Number(id)));
   }
 }
