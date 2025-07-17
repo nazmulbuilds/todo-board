@@ -12,7 +12,7 @@ export const tickets = pgTable("tickets", {
   title: text("title").notNull(),
   description: text("description").notNull(),
   expiresAt: timestamp("expires_at").notNull(),
-  categoryId: integer("category_id").references(() => categories.id),
+  categoryId: integer("category_id").notNull().references(() => categories.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
 });
@@ -63,12 +63,13 @@ const insertTicketsSchema = createInsertSchema(
     description: schema => schema.max(1000).describe("The description of the ticket"),
     expiresAt: z.string().datetime().transform(val => new Date(val)).pipe(
       z.date().min(new Date()).max(new Date(new Date().setFullYear(new Date().getFullYear() + 1))),
-    ).describe("The expiration date of the ticket"),
+    ).describe("The expiration date of the ticket"), // "2025-07-18T13:34:31.386Z"
   },
 ).required({
   title: true,
   description: true,
   expiresAt: true,
+  categoryId: true,
 }).omit({
   id: true,
   createdAt: true,
@@ -82,7 +83,7 @@ const updateTicketsSchema = createUpdateSchema(
     description: schema => schema.min(1).max(1000).describe("The description of the ticket"),
     expiresAt: z.string().datetime().transform(val => new Date(val)).pipe(
       z.date().min(new Date()).max(new Date(new Date().setFullYear(new Date().getFullYear() + 1))),
-    ).describe("The expiration date of the ticket"),
+    ).optional().describe("The expiration date of the ticket"),
   },
 ).required({}).omit({
   id: true,

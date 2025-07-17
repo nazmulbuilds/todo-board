@@ -1,7 +1,8 @@
-import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { forwardRef, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { and, eq } from "drizzle-orm";
 import { NodePgDatabase, NodePgTransaction } from "drizzle-orm/node-postgres";
 
+import { CategoriesService } from "../categories/categories.service";
 import { DATABASE_CONNECTION } from "../database/database-connection";
 import { LabelsService } from "../labels/labels.service";
 import * as schema from "./schema";
@@ -12,6 +13,8 @@ export class TicketsService {
     @Inject(DATABASE_CONNECTION)
     private readonly db: NodePgDatabase<typeof schema>,
     private readonly labelsService: LabelsService,
+    @Inject(forwardRef(() => CategoriesService))
+    private readonly categoriesService: CategoriesService,
   ) {}
 
   async create(data: schema.InsertTicketsDto) {
@@ -118,8 +121,12 @@ export class TicketsService {
   }
 
   async update(id: string, data: schema.UpdateTicketsDto) {
-    // check if the label exists
+    // check if the ticket exists
     await this.checkIfExists(id);
+    // check if the category exists
+    if (data.categoryId) {
+      await this.categoriesService.getById(data.categoryId as unknown as string);
+    }
 
     const [updatedRow] = await this.db.update(schema.tickets).set(data).where(eq(schema.tickets.id, Number(id))).returning();
 
