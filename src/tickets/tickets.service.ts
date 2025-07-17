@@ -46,6 +46,21 @@ export class TicketsService {
             title: true,
           },
         },
+        history: {
+          orderBy: (history, { desc }) => desc(history.createdAt),
+          columns: {
+            ticketId: false,
+            categoryId: false,
+          },
+          with: {
+            category: {
+              columns: {
+                id: true,
+                title: true,
+              },
+            },
+          },
+        },
       },
     });
     // .then(tickets =>
@@ -80,6 +95,21 @@ export class TicketsService {
             title: true,
           },
         },
+        history: {
+          orderBy: (history, { desc }) => desc(history.createdAt),
+          columns: {
+            ticketId: false,
+            categoryId: false,
+          },
+          with: {
+            category: {
+              columns: {
+                id: true,
+                title: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -88,6 +118,30 @@ export class TicketsService {
     }
 
     return ticket;
+  }
+
+  async getAllHistory() {
+    return this.db.query.ticketsToCategoriesHistory.findMany({
+      orderBy: (history, { desc }) => desc(history.createdAt),
+      columns: {
+        ticketId: false,
+        categoryId: false,
+      },
+      with: {
+        ticket: {
+          columns: {
+            id: true,
+            title: true,
+          },
+        },
+        category: {
+          columns: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+    });
   }
 
   async checkIfExists(id: string) {
@@ -122,19 +176,28 @@ export class TicketsService {
 
   async update(id: string, data: schema.UpdateTicketsDto) {
     // check if the ticket exists
-    await this.checkIfExists(id);
+    const ticket = await this.checkIfExists(id);
     // check if the category exists
-    if (data.categoryId) {
+    if (data.categoryId !== ticket.categoryId) {
       await this.categoriesService.getById(data.categoryId as unknown as string);
     }
 
-    const [updatedRow] = await this.db.update(schema.tickets).set(data).where(eq(schema.tickets.id, Number(id))).returning();
+    return this.db.transaction(async (tx) => {
+      const [updatedRow] = await tx.update(schema.tickets).set(data).where(eq(schema.tickets.id, Number(id))).returning();
+      if (data.categoryId !== undefined && data.categoryId !== ticket.categoryId) {
+        await tx.insert(schema.ticketsToCategoriesHistory).values({
+          ticketId: ticket.id,
+          categoryId: data.categoryId,
+        });
+      }
 
-    return updatedRow;
+      return updatedRow;
+    });
   }
 
   async bulkUpdateCategory(oldCategoryId: string, newCategoryId: string, tx: NodePgTransaction<any, any>) {
-    await tx.update(schema.tickets).set({ categoryId: Number(newCategoryId) }).where(eq(schema.tickets.categoryId, Number(oldCategoryId)));
+    const updatedRows = await tx.update(schema.tickets).set({ categoryId: Number(newCategoryId) }).where(eq(schema.tickets.categoryId, Number(oldCategoryId))).returning({ id: schema.tickets.id });
+    await tx.insert(schema.ticketsToCategoriesHistory).values(updatedRows.map(row => ({ ticketId: row.id, categoryId: Number(newCategoryId) })));
   }
 
   async delete(id: string) {

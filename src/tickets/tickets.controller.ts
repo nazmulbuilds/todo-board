@@ -3,7 +3,7 @@ import { ApiBadRequestResponse, ApiBearerAuth, ApiCreatedResponse, ApiNotFoundRe
 
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { generateBadRequestExample, generateNotFoundExample } from "../utils/generate-open-api-example";
-import { AddLabelToTicketDto, InsertTicketsDto, SelectTicketsDto, UpdateTicketsDto } from "./schema";
+import { AddLabelToTicketDto, InsertTicketsDto, SelectTicketsDto, SelectTicketToCategoriesHistoryDto, UpdateTicketsDto } from "./schema";
 import { TicketsService } from "./tickets.service";
 
 @Controller("tickets")
@@ -20,7 +20,7 @@ export class TicketsController {
     return this.ticketsService.create(body);
   }
 
-  @Get(":id")
+  @Get("get/:id")
   @ApiOkResponse({ type: SelectTicketsDto, description: "Get ticket by id" })
   getTicketById(@Param("id") id: string) {
     return this.ticketsService.getById(id);
@@ -30,6 +30,12 @@ export class TicketsController {
   @ApiOkResponse({ type: [SelectTicketsDto], description: "Get all tickets" })
   getAll() {
     return this.ticketsService.getAll();
+  }
+
+  @Get("history")
+  @ApiOkResponse({ type: [SelectTicketToCategoriesHistoryDto], description: "Get all history" })
+  getAllHistory() {
+    return this.ticketsService.getAllHistory();
   }
 
   @Post(":id/labels")

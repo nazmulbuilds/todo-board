@@ -46,15 +46,47 @@ export const ticketsToLabelsRelations = relations(
   }),
 );
 
+export const ticketsToCategoriesHistory = pgTable(
+  "tickets_to_categories_history",
+  {
+    ticketId: integer("ticket_id")
+      .notNull()
+      .references(() => tickets.id, { onDelete: "cascade" }),
+    categoryId: integer("category_id")
+      .notNull()
+      .references(() => categories.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  t => [
+    primaryKey({ columns: [t.ticketId, t.categoryId, t.createdAt] }),
+  ],
+);
+
+export const ticketsToCategoriesHistoryRelations = relations(
+  ticketsToCategoriesHistory,
+  ({ one }) => ({
+    ticket: one(tickets, {
+      fields: [ticketsToCategoriesHistory.ticketId],
+      references: [tickets.id],
+    }),
+    category: one(categories, {
+      fields: [ticketsToCategoriesHistory.categoryId],
+      references: [categories.id],
+    }),
+  }),
+);
+
 export const ticketsRelations = relations(tickets, ({ one, many }) => ({
   category: one(categories, {
     fields: [tickets.categoryId],
     references: [categories.id],
   }),
   labels: many(ticketsToLabels),
+  history: many(ticketsToCategoriesHistory),
 }));
 
 export const SelectTicketsDto = createZodDto(createSelectSchema(tickets));
+export const SelectTicketToCategoriesHistoryDto = createZodDto(createSelectSchema(ticketsToCategoriesHistory));
 
 const insertTicketsSchema = createInsertSchema(
   tickets,
