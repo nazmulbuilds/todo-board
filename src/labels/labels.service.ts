@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, Inject, Injectable, NotFoundException } from "@nestjs/common";
 import { eq } from "drizzle-orm";
 import { NodePgDatabase, NodePgTransaction } from "drizzle-orm/node-postgres";
 
@@ -13,6 +13,15 @@ export class LabelsService {
   ) {}
 
   async create(data: schema.InsertLabelsDto, tx?: NodePgTransaction<any, any>) {
+    // check if the title is already taken
+    const existingLabel = await this.db.query.labels.findFirst({
+      where: (labels, { eq }) => eq(labels.title, data.title),
+    });
+
+    if (existingLabel) {
+      throw new BadRequestException("Label title already taken");
+    }
+
     const [insertedRow] = await (tx || this.db).insert(schema.labels).values(data).returning();
 
     return insertedRow;

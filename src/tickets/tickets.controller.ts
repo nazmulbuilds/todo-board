@@ -3,7 +3,7 @@ import { ApiBadRequestResponse, ApiBearerAuth, ApiCreatedResponse, ApiNotFoundRe
 
 import { JwtAuthGuard } from "../auth/jwt-auth.guard";
 import { generateBadRequestExample, generateNotFoundExample } from "../utils/generate-open-api-example";
-import { InsertTicketsDto, SelectTicketsDto, UpdateTicketsDto } from "./schema";
+import { AddLabelToTicketDto, InsertTicketsDto, SelectTicketsDto, UpdateTicketsDto } from "./schema";
 import { TicketsService } from "./tickets.service";
 
 @Controller("tickets")
@@ -18,6 +18,19 @@ export class TicketsController {
   @ApiBadRequestResponse(generateBadRequestExample(InsertTicketsDto.schema))
   createTicket(@Body() body: InsertTicketsDto) {
     return this.ticketsService.create(body);
+  }
+
+  @Post(":id/labels")
+  @ApiCreatedResponse({ description: "Add label to ticket" })
+  @ApiNotFoundResponse(generateNotFoundExample("Ticket/Label"))
+  addLabelToTicket(@Param("id") id: string, @Body() body: AddLabelToTicketDto) {
+    return this.ticketsService.addLabel(id, body.labelId);
+  }
+
+  @Delete(":id/labels/:labelId")
+  @ApiOkResponse({ description: "Remove label from ticket" })
+  removeLabelFromTicket(@Param("id") id: string, @Param("labelId") labelId: string) {
+    return this.ticketsService.removeLabel(id, labelId);
   }
 
   @Get()

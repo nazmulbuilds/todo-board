@@ -21,7 +21,24 @@ export class CategoriesService {
   async getAll() {
     return this.db.query.categories.findMany({
       with: {
-        tickets: true,
+        tickets: {
+          with: {
+            labels: {
+              columns: {
+                labelId: false,
+                ticketId: false,
+              },
+              with: {
+                label: {
+                  columns: {
+                    id: true,
+                    title: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     });
   }

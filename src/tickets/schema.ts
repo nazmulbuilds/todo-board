@@ -1,11 +1,11 @@
 import { relations } from "drizzle-orm";
-import { integer, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { integer, pgTable, primaryKey, serial, text, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema, createSelectSchema, createUpdateSchema } from "drizzle-zod";
 import { createZodDto } from "nestjs-zod";
 import { z } from "zod";
 
 import { categories } from "../categories/schema";
-import { ticketsToLabels } from "../labels/schema";
+import { labels } from "../labels/schema";
 
 export const tickets = pgTable("tickets", {
   id: serial("id").primaryKey(),
@@ -16,6 +16,35 @@ export const tickets = pgTable("tickets", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
 });
+
+export const ticketsToLabels = pgTable(
+  "tickets_to_labels",
+  {
+    ticketId: integer("ticket_id")
+      .notNull()
+      .references(() => tickets.id, { onDelete: "cascade" }),
+    labelId: integer("label_id")
+      .notNull()
+      .references(() => labels.id, { onDelete: "cascade" }),
+  },
+  t => [
+    primaryKey({ columns: [t.ticketId, t.labelId] }),
+  ],
+);
+
+export const ticketsToLabelsRelations = relations(
+  ticketsToLabels,
+  ({ one }) => ({
+    ticket: one(tickets, {
+      fields: [ticketsToLabels.ticketId],
+      references: [tickets.id],
+    }),
+    label: one(labels, {
+      fields: [ticketsToLabels.labelId],
+      references: [labels.id],
+    }),
+  }),
+);
 
 export const ticketsRelations = relations(tickets, ({ one, many }) => ({
   category: one(categories, {
@@ -61,5 +90,12 @@ const updateTicketsSchema = createUpdateSchema(
   updatedAt: true,
 });
 
+const addLabelToTicketSchema = createInsertSchema(ticketsToLabels).required({
+  labelId: true,
+}).omit({
+  ticketId: true,
+});
+
 export class InsertTicketsDto extends createZodDto(insertTicketsSchema) {}
 export class UpdateTicketsDto extends createZodDto(updateTicketsSchema) {}
+export class AddLabelToTicketDto extends createZodDto(addLabelToTicketSchema) {}
