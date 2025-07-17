@@ -34,6 +34,12 @@ export class CategoriesController {
     return this.categoriesService.update(id, body);
   }
 
+  @Patch(":id/swap-order/:categoryId2")
+  @ApiOkResponse({ description: "Swap order of two categories" })
+  swapOrder(@Param("id") id: string, @Param("categoryId2") categoryId2: string) {
+    return this.categoriesService.swapOrder(id, categoryId2);
+  }
+
   @Delete(":id")
   @ApiOkResponse({ description: "Delete category" })
   @ApiNotFoundResponse(generateNotFoundExample("Category"))

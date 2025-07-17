@@ -1,5 +1,5 @@
 import { Inject, Injectable, NotFoundException } from "@nestjs/common";
-import { eq } from "drizzle-orm";
+import { eq, or, sql } from "drizzle-orm";
 import { NodePgDatabase } from "drizzle-orm/node-postgres";
 
 import { DATABASE_CONNECTION } from "../database/database-connection";
@@ -15,13 +15,20 @@ export class CategoriesService {
   ) {}
 
   async create(data: schema.InsertCategoriesDto) {
-    const [insertedRow] = await this.db.insert(schema.categories).values(data).returning();
+    // get the max order
+    const maxOrder = await this.db.select({ maxOrder: sql<number>`max(${schema.categories.order})` }).from(schema.categories);
+
+    const [insertedRow] = await this.db.insert(schema.categories).values({
+      ...data,
+      order: maxOrder[0].maxOrder + 1,
+    }).returning();
 
     return insertedRow;
   }
 
   async getAll() {
     return this.db.query.categories.findMany({
+      orderBy: (categories, { asc }) => asc(categories.order),
       with: {
         tickets: {
           with: {
@@ -64,6 +71,32 @@ export class CategoriesService {
     const [updatedRow] = await this.db.update(schema.categories).set(data).where(eq(schema.categories.id, Number(id))).returning();
 
     return updatedRow;
+  }
+
+  async swapOrder(categoryId1: string, categoryId2: string) {
+    const categories = await this.db.query.categories.findMany({
+      where: (categories, { eq }) => or(eq(categories.id, Number(categoryId1)), eq(categories.id, Number(categoryId2))),
+    });
+
+    if (categories.length !== 2) {
+      throw new NotFoundException("Category not found");
+    }
+
+    await this.db.transaction(async (tx) => {
+      const [category1, category2] = categories;
+
+      await tx.update(schema.categories).set({
+        order: 0,
+      }).where(eq(schema.categories.id, category1.id));
+
+      await tx.update(schema.categories).set({
+        order: category1.order,
+      }).where(eq(schema.categories.id, category2.id));
+
+      await tx.update(schema.categories).set({
+        order: category2.order,
+      }).where(eq(schema.categories.id, category1.id));
+    });
   }
 
   async delete(id: string, moveExistingTicketsToCategoryId: string) {
