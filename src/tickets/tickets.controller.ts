@@ -20,6 +20,18 @@ export class TicketsController {
     return this.ticketsService.create(body);
   }
 
+  @Get(":id")
+  @ApiOkResponse({ type: SelectTicketsDto, description: "Get ticket by id" })
+  getTicketById(@Param("id") id: string) {
+    return this.ticketsService.getById(id);
+  }
+
+  @Get()
+  @ApiOkResponse({ type: [SelectTicketsDto], description: "Get all tickets" })
+  getAll() {
+    return this.ticketsService.getAll();
+  }
+
   @Post(":id/labels")
   @ApiCreatedResponse({ description: "Add label to ticket" })
   @ApiNotFoundResponse(generateNotFoundExample("Ticket/Label"))
@@ -31,12 +43,6 @@ export class TicketsController {
   @ApiOkResponse({ description: "Remove label from ticket" })
   removeLabelFromTicket(@Param("id") id: string, @Param("labelId") labelId: string) {
     return this.ticketsService.removeLabel(id, labelId);
-  }
-
-  @Get()
-  @ApiOkResponse({ type: [SelectTicketsDto], description: "Get all tickets" })
-  getAll() {
-    return this.ticketsService.getAll();
   }
 
   @Patch(":id")

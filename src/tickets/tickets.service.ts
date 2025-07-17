@@ -53,8 +53,54 @@ export class TicketsService {
     // );
   }
 
+  async getById(id: string) {
+    const ticket = await this.db.query.tickets.findFirst({
+      where: (tickets, { eq }) => eq(tickets.id, Number(id)),
+      with: {
+        labels: {
+          columns: {
+            labelId: false,
+            ticketId: false,
+          },
+          with: {
+            label: {
+              columns: {
+                id: true,
+                title: true,
+              },
+            },
+          },
+        },
+        category: {
+          columns: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+    });
+
+    if (!ticket) {
+      throw new NotFoundException("Ticket not found");
+    }
+
+    return ticket;
+  }
+
+  async checkIfExists(id: string) {
+    const ticket = await this.db.query.tickets.findFirst({
+      where: (tickets, { eq }) => eq(tickets.id, Number(id)),
+    });
+
+    if (!ticket) {
+      throw new NotFoundException("Ticket not found");
+    }
+
+    return ticket;
+  }
+
   async addLabel(ticketId: string, labelId: number) {
-    await this.getById(ticketId);
+    await this.checkIfExists(ticketId);
     await this.labelsService.getById(labelId as unknown as string);
 
     await this.db.insert(schema.ticketsToLabels).values({ ticketId: Number(ticketId), labelId });
@@ -71,21 +117,9 @@ export class TicketsService {
     }
   }
 
-  async getById(id: string) {
-    const ticket = await this.db.query.tickets.findFirst({
-      where: (tickets, { eq }) => eq(tickets.id, Number(id)),
-    });
-
-    if (!ticket) {
-      throw new NotFoundException("Ticket not found");
-    }
-
-    return ticket;
-  }
-
   async update(id: string, data: schema.UpdateTicketsDto, tx?: NodePgTransaction<any, any>) {
     // check if the label exists
-    await this.getById(id);
+    await this.checkIfExists(id);
 
     const [updatedRow] = await (tx || this.db).update(schema.tickets).set(data).where(eq(schema.tickets.id, Number(id))).returning();
 
@@ -94,7 +128,7 @@ export class TicketsService {
 
   async delete(id: string, tx?: NodePgTransaction<any, any>) {
     // check if the label exists
-    await this.getById(id);
+    await this.checkIfExists(id);
     await (tx || this.db).delete(schema.tickets).where(eq(schema.tickets.id, Number(id)));
   }
 }
