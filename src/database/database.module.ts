@@ -5,7 +5,6 @@ import { Pool } from "pg";
 import env from "@/env";
 
 import * as categoriesSchema from "../categories/schema";
-import * as exampleSchema from "../examples/schema";
 import * as labelsSchema from "../labels/schema";
 import * as ticketsSchema from "../tickets/schema";
 import * as usersSchema from "../users/schema";
@@ -20,7 +19,6 @@ import { DATABASE_CONNECTION } from "./database-connection";
         connectionString: env.DATABASE_URL,
       }), {
         schema: {
-          ...exampleSchema,
           ...usersSchema,
           ...categoriesSchema,
           ...labelsSchema,
